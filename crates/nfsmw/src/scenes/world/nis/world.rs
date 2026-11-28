@@ -95,7 +95,9 @@ impl WorldScene {
 
     /// Ends the scene that plays. Returns whether one did.
     pub(in crate::scenes::world) fn stop_nis(&mut self) -> bool {
-        self.nis.stop()
+        let stopped = self.nis.stop();
+        self.rain.clear_nis_override();
+        stopped
     }
 
     /// The console line about the NIS player.
@@ -132,6 +134,12 @@ impl WorldScene {
         let events = self.nis.advance(self.nis_capture_step(dt));
         self.apply_nis_events(events);
         if let Some(outcome) = self.nis.take_outcome() {
+            self.rain.clear_nis_override();
+            if outcome == super::player::NisOutcome::Skipped {
+                // A skipped camera cut can bypass the key that restarts the sun.
+                self.day.clear_story_overcast();
+                self.update_day(0.0, true);
+            }
             log::info!("NIS scene ended: {outcome:?}");
             crate::parity::career_trace::record("nis_end", serde_json::json!({"outcome": format!("{outcome:?}")}));
             // A bust waiting on its arrest scene goes on; the bust ignores any other scene's end.

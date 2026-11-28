@@ -24,3 +24,17 @@
   speedbreaker clock, no community mod code read or copied. Checked by synthetic tests in `day.rs` only. The
   mod's pause and time-scale facts (IsPaused, the sim time-scale field, the frame detour) were not
   cross-checked against the executable in this pass and are not relied on.
+
+## Career event lighting and frontend transitions
+
+Both inspected PC installs declare TOD 1 for the opening D-Day race, the two sprints and the final Razor race,
+and 0.5 for Rog's circuit. The meeting between Rog and Razor inherits -1. In a stock career run the five green-light
+phases were 0.909, 0.941, 0.941, 0.481 and 0.938. All five had a negative rain override (dry). Direct event launches
+omitted the career phase setter. A normal safehouse round trip preserved phase 0.3856 on both sides of SetRoaming.
+Cold safehouse entry seeds the observed initial orbit (approximately 0.45, moving toward dawn).
+The car-lot jump and first-safehouse movie path request zero; the latter is confirmed statically.
+
+The restored cinematic lighting uses the four data fields described in the [ENISTimeOfDay reference](../mods/nfsmw_enistimeofday.md).
+Camera key entries dispatch the active sequence's ICECut tags; stock prologue scene-time observations match the
+authored key boundaries. Clearing residual overcast and a held update rate on frontend return and skip prevents an
+interrupted shot from fixing the weather for the next drive.

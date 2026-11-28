@@ -96,6 +96,7 @@ impl Frontend {
             Err(e) => return self.load_failed(alias, &e, host, env),
         };
         log::info!("career: loaded {alias}");
+        self.parked_career_clock = None;
         self.career.load(career);
         // The screen that asked may have been left while the tables were read: only that one closes.
         if self.screens.top() == top.as_deref() {
@@ -168,6 +169,7 @@ impl Frontend {
             }
         };
         log::info!("career: created the alias {alias}");
+        self.parked_career_clock = None;
         self.career.load(career);
         self.career_notice(Text::Key("dialogs-alias-created", Args::new().with("alias", alias)), host, env);
     }

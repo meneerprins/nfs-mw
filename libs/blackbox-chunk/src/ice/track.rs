@@ -117,6 +117,11 @@ pub struct Track {
 }
 
 impl Track {
+    /// The zero-based camera key selected at normalized time `t`.
+    pub fn key_index(&self, t: f32) -> Option<usize> {
+        self.interval(t).map(|(index, _, _)| index)
+    }
+
     /// Reads a record. `None` when a key does not parse or the header is short.
     pub fn from_record(record: &CameraRecord<'_>) -> Option<Self> {
         let header = record.header;

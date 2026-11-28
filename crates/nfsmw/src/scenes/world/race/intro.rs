@@ -321,6 +321,10 @@ impl WorldScene {
             }
         }
         let Some(engine) = session.engine.as_mut() else { return };
+        // The scene can override rain temporarily. Racing reapplies the event's chance policy.
+        if session.options.career {
+            self.apply_career_rain(session.origin.race.story.chance_of_rain);
+        }
         let started = match rolling {
             true => engine.start_now(),
             false => engine.begin_countdown(),

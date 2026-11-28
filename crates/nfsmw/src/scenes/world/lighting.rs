@@ -11,11 +11,7 @@ impl WorldScene {
         self.time_of_day
             .as_ref()
             .and_then(|presets| {
-                nfsmw_data::time_of_day::car_specular_scale(
-                    presets,
-                    self.atmosphere.intensity(),
-                    self.sun.preset_height(),
-                )
+                nfsmw_data::time_of_day::car_specular_scale(presets, self.visible_overcast(), self.sun.preset_height())
             })
             .unwrap_or(1.0)
     }
@@ -29,7 +25,7 @@ impl WorldScene {
     fn atmosphere_inputs(&self) -> Option<nfsmw_data::time_of_day::Atmosphere> {
         nfsmw_data::time_of_day::atmosphere(
             self.time_of_day.as_ref()?,
-            self.atmosphere.intensity(),
+            self.visible_overcast(),
             self.sun.preset_height(),
         )
     }
@@ -64,7 +60,7 @@ impl WorldScene {
         let inputs = self.atmosphere_inputs()?;
         Some(blackbox_gfx::SurfaceLight {
             shadow_strength: nfsmw_data::time_of_day::shadows::strength(
-                self.atmosphere.intensity(),
+                self.visible_overcast(),
                 self.sun.preset_height(),
             ),
             ambient: inputs.lighting.ambient.map(|channel| channel.min(1.0)),
@@ -74,7 +70,7 @@ impl WorldScene {
             specular: inputs.lighting.specular,
             specular_power: inputs.specular_power,
             reflection_scale: self.wet_road.contribution(),
-            reflective_specular_scale: 1.0 - self.atmosphere.intensity(),
+            reflective_specular_scale: 1.0 - self.visible_overcast(),
         })
     }
 

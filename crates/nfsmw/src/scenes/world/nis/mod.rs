@@ -25,6 +25,7 @@ mod command;
 mod cop_cars;
 mod cop_wait;
 mod events;
+pub(super) use events::SceneLighting;
 mod handlers;
 mod intro_grid;
 mod kind;

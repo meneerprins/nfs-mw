@@ -63,7 +63,7 @@ position update). **[pc + decomp]**
 |---|---|
 | `ENISMotionBlur` (on) | Sets the global motion blur flag to `on != 0`. The renderer's motion blur amount fades to 0 while it is off. The flag is set back to on when the scene is released and when a camera track reaches its end. **[pc]** |
 | `ENISAeroDynamics` (factor) | Sets the global NIS aerodynamics factor (the callback writes it). While it is above 0, every NIS car's suspension adds downforce with it. It is not reset when the scene ends. **[pc + decomp]** |
-| `ENISRain` (intensity) | Turns the rain override on and sets its intensity. At the release the override is cleared and the earlier rain flag restored. The only prologue use sends -1 (`IntroNis10`); what -1 does in the rain code was not read. **[pc]** |
+| `ENISRain` (intensity) | Turns the rain override on and sets its intensity. At the release the override is cleared and the earlier rain flag restored. The only prologue use sends -1 (`IntroNis10`); -1 forces dry weather in offline career. **[pc]** |
 | `ENISRoadNoise` (off) | Sets the global the car road-noise sound reads. Reset at the release. **[pc]** |
 | `ENISStopEffects` | Kills every particle emitter group that is not marked persistent, then restarts the world's scenery effects. **[pc]** |
 | `ENISOverlayMessage` (package, message) | When a front-end package is up, sends the message's hash to the package. **[pc]** |
@@ -146,7 +146,7 @@ Read in the PC camera mover. **[pc]**
 - The scene's police channels take the vehicles of the scene's list, made for the scene once their model has loaded;
   without a list, or when a model fails, the earlier police-car rule holds.
 - Not acted on, and logged: `ENISNitro` and `ENISNeutralRev` (no NIS car flames or revs), `ENISAeroDynamics`,
-  `ENISRain`, `ENISRoadNoise`, `ECameraPhotoFinish`, `EDDaySpeech`, the camera key bytes 6 to 9, hybrid space and the
+  `ENISRoadNoise`, `ECameraPhotoFinish`, `EDDaySpeech`, the camera key bytes 6 to 9, hybrid space and the
   overlay values 2 and 4.
 - `ENISPlayEffect` still plays its named effect, as a stand-in for the crash effects the original's detached cars make
   by colliding **[ours]**; the original does nothing with the event.
@@ -158,3 +158,5 @@ motion from their last animated poses into suspension, ground and car contacts. 
 placement, including across a shot cut. The race grid and the player's handoff keep their own ownership.
 During an in-game scene, advance placed particle emitters and requested object effects with the scene clock.
 A paused scene or a frame held for capture contributes no particle time.
+
+The remake restores the four lighting fields in ENISTimeOfDay and applies ENISRain. See the career and scripted scene section of [time of day](time-of-day.md).

@@ -169,6 +169,8 @@ pub struct Frontend {
     menu_in_window: bool,
     /// The career being played, empty outside career mode (quick race, free roam from the command line).
     pub(super) career: CareerHandle,
+    /// The driving clock while the career world gives the window to menus, movies or loading.
+    pub(super) parked_career_clock: Option<crate::scenes::world::DayClock>,
     /// The profile folder careers are saved in. `None` when there is no per-user folder. Screenshot runs use a temp
     /// folder instead (`begin`), so they never write the player's profiles.
     pub(super) profiles: Option<ProfileDir>,
@@ -260,6 +262,7 @@ impl Frontend {
             browse: None,
             menu_in_window,
             career: CareerHandle::default(),
+            parked_career_clock: None,
             profiles: ProfileDir::default_dir(),
             in_safe_house: false,
             origin: QuitTo::Main,
@@ -365,6 +368,7 @@ impl Frontend {
         self.startup = false;
         self.screens.clear();
         self.career.end_play();
+        self.parked_career_clock = None;
         self.in_safe_house = false;
         self.open_menu(name, args, host, env);
     }
@@ -425,8 +429,11 @@ impl Frontend {
     }
 
     /// Saves the settings the menus changed, leaves the safe house and goes on driving.
-    fn resume_driving(&mut self, env: &mut Env) {
+    fn resume_driving(&mut self, host: &mut Host, env: &mut Env) {
         self.save_settings(env.changed);
+        if self.in_safe_house {
+            host.scene.resume_career_roaming();
+        }
         self.leave_safe_house();
         self.resume();
     }

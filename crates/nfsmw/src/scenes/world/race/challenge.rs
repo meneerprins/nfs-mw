@@ -212,6 +212,9 @@ impl WorldScene {
             self,
             super::police_context::context_of(race, options.career),
         )?;
+        if options.career {
+            self.apply_career_environment(&race.story);
+        }
         self.race = Some(RaceSession {
             event: crate::career::race_event_id(race),
             map: crate::hud::MapSource::of_race(

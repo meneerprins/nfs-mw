@@ -32,3 +32,12 @@ on-screen droplet size adjustment and supplies 0.5. The remake exposes an
 independent size multiplier with the same default. No plugin code was ported.
 Reference: <https://github.com/ThirteenAG/WidescreenFixesPack/blob/master/data/NFSMostWanted.WidescreenFix/scripts/NFSMostWanted.WidescreenFix.ini>.
 The reconstructed PC size remains available at 1.0.
+
+## Career and scene overrides
+
+2026-11-28. Read-only inspection of the same PC executable distinguished the
+offline sampler (0x7539d0), race chance setter (0x6054a0), scene rain key
+(0x6233d0), and scene release (0x6f7520). A live career run recorded the rain
+override at five driven race starts and at the post-Rog meeting. Raw captures
+remain private. The renderer override precedence is covered by a synthetic
+regional-map test. Scene weather easing and visuals still need a live comparison.

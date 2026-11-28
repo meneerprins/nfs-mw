@@ -173,6 +173,9 @@ impl Frontend {
     /// (`story-flow.md` section 2.3).
     pub(super) fn open_car_lot(&mut self, zone: Option<String>, host: &mut Host, env: &mut Env) {
         log::info!("career: the car lot opens ({zone:?})");
+        if zone.is_none() {
+            self.seek_career_day_start(host);
+        }
         let lot = serde_json::json!({"to": "car_lot", "zone": zone, "first_car": zone.is_none()});
         crate::parity::career_trace::record("handoff", lot);
         let args = Args { safehouse: true, first_car: zone.is_none(), from_world: zone.is_some(), ..Args::default() };

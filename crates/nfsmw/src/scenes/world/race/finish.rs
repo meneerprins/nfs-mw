@@ -102,6 +102,9 @@ impl WorldScene {
             self.screen_fade.clear();
         }
         if session.options.career {
+            if !session.origin.race.story.dday {
+                self.rain.set_story_override(0.0);
+            }
             self.career_race_left();
         }
     }

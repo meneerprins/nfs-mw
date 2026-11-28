@@ -136,6 +136,7 @@ fn update(
         fe.latch = true;
     }
     if garage.open || garage.had_input {
+        fe.advance_parked_career_clock(time.delta_secs().min(MAX_STEP), settings.appearance.lighting.freeze_sun);
         *clicking = false;
         *wheel = 0.0;
         return;
@@ -158,7 +159,9 @@ fn update(
         {
             pending_mask |= pad::BACK;
         }
-        fe.garage_loading_frame(time.delta_secs().min(MAX_STEP), pending_mask, host, &mut env, &mut garage);
+        let dt = time.delta_secs().min(MAX_STEP);
+        fe.advance_parked_career_clock(dt, settings.appearance.lighting.freeze_sun);
+        fe.garage_loading_frame(dt, pending_mask, host, &mut env, &mut garage);
         fe.changed = changed;
         return;
     }
@@ -174,19 +177,18 @@ fn update(
     if let Some(name) = picked {
         fe.show_browsed(&name, host, &mut env);
     }
-
     // Escape belongs to the front end unless the console had it (it closes the console on the same press).
     let console_had_it = console.open || fe.console_was_open;
     fe.console_was_open = console.open;
     host.cancel_handled = !console.open;
     host.flow_driven = true;
-
     // A script replaces the input and the clock.
     let top = fe.screens.top().map(str::to_owned);
     let scripted = fe.script.as_mut().and_then(|script| script.next_mask_on(top.as_deref()));
     // A screenshot waits for the world while the loading screen is up (the world is not in the window until it is built).
     host.hold_capture = fe.script.as_ref().is_some_and(|s| !s.is_over()) || fe.stage == Stage::Loading;
     let dt = if scripted.is_some() { script::STEP } else { time.delta_secs().min(MAX_STEP) };
+    fe.advance_parked_career_clock(dt, settings.appearance.lighting.freeze_sun);
     // A slot waiting for its key takes the next key pressed; Escape cancels the wait.
     let script_key = fe.script.as_mut().and_then(UiScript::take_key);
     // The pointer on the screen (FEng units): a scripted run sets it (`pointer X Y`), else it is the window's.
@@ -287,7 +289,6 @@ fn update(
             fe.latch = false;
         }
     }
-
     match fe.stage {
         Stage::Boot(Boot::Movie { bypass, .. }) => {
             let skip = bypass
@@ -398,7 +399,6 @@ fn update(
             }
         }
     }
-
     fe.last_mask = mask;
     fe.trace_career_state();
     // The input layer seats both players while a split-screen race or a co-op session (`input::coop_seats`) is on.

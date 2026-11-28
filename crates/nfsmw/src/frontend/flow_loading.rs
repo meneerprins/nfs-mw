@@ -148,6 +148,11 @@ impl Frontend {
             Err(_) => return self.loading_failed("the loading thread panicked", host, env),
         };
         world.set_career(self.career.clone(), self.profiles.clone());
+        if self.career.is_active()
+            && let Some(clock) = self.parked_career_clock.clone().or_else(|| host.scene.career_clock())
+        {
+            world.restore_career_clock(clock);
+        }
         if let Some(setup) = self.split.as_ref()
             && setup.customs[1]
         {
@@ -189,6 +194,7 @@ impl Frontend {
         if !self.replace_scene(host, Box::new(scene), true) {
             return self.loading_failed("the world could not be put in the window", host, env);
         }
+        self.parked_career_clock = None;
         if let Some(id) = self.quick_custom.take()
             && let Err(error) = self.apply_my_car(host, &id)
         {

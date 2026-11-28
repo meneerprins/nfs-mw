@@ -43,6 +43,10 @@ pub struct RaceStory {
     pub nis_shell: bool,
     /// `DDayRace`: a D-Day (prologue) race. Its tutorial state is skipped (`story-flow.md` section 1.1).
     pub dday: bool,
+    /// `TOD`: the normalized sun phase requested at event entry. A negative sentinel leaves it unchanged.
+    pub sun_phase: Option<f32>,
+    /// `ChanceOfRain`: the script's chance input. The negative field value is retained and forces dry weather.
+    pub chance_of_rain: Option<f32>,
     /// `BossRace` (attribute `0xFF5EE5D6`, see [`BOSS_RACE_FIELD`]): a boss race. A quick race of one plays
     /// `QuickRaceNIS` and no movie (`story-flow.md` section 1.2).
     pub boss_race: bool,
@@ -83,6 +87,8 @@ impl RaceStory {
             quick_race_nis: text(c, "QuickRaceNIS"),
             nis_shell: c.get_bool("NISShell").unwrap_or(false),
             dday: c.get_bool("DDayRace").unwrap_or(false),
+            sun_phase: c.get_f32("TOD").filter(|phase| (0.0..=1.0).contains(phase)),
+            chance_of_rain: c.get_f32("ChanceOfRain").filter(|chance| chance.is_finite()),
             boss_race: flag_at(c, BOSS_RACE_FIELD),
             special_setup: flag_at(c, SPECIAL_SETUP_FIELD),
             defer_rewards: flag_at(c, DEFER_REWARDS_FIELD),

@@ -8,6 +8,7 @@ use crate::career::{Career, CareerData, CareerHandle};
 use crate::frontend::flow_movie_tests::{Rig, install_rig};
 use crate::frontend::ids::screen;
 use crate::frontend::logic::{Command, QuitTo};
+use crate::scenes::world::DayClock;
 use crate::viewer::Scene;
 
 struct WorldProbe {
@@ -35,6 +36,11 @@ impl Scene for WorldProbe {
     fn prepare_safe_house(&mut self) -> bool {
         self.prepared.fetch_add(1, Ordering::Relaxed);
         true
+    }
+    fn career_clock(&self) -> Option<DayClock> {
+        let mut clock = DayClock::new(Default::default());
+        clock.set_story_phase(0.37);
+        Some(clock)
     }
 }
 
@@ -88,6 +94,11 @@ fn batch12_pause_safe_house_rechecks_context_then_enters_the_room() {
             assert!(fe.in_safe_house && fe.career.is_prelude() && fe.career.is_active());
             assert_eq!(fe.screens.top(), Some(screen::MAIN_MENU_SUB));
             assert_eq!(prepared.load(Ordering::Relaxed), 1, "the old world's pending chase was handled once");
+            let parked_phase = fe.parked_career_clock.as_ref().unwrap().sun_phase();
+            assert_eq!(parked_phase, 0.37, "entering an ordinary safe house preserves the sun phase");
+            fe.advance_parked_career_clock(5.0, false);
+            let resumed_phase = fe.parked_career_clock.as_ref().unwrap().sun_phase();
+            assert_ne!(resumed_phase, parked_phase, "the sun moves while the safe house menu is open");
             fe.apply(vec![Command::JumpToSafeHouse], host, env);
             assert_eq!(prepared.load(Ordering::Relaxed), 1, "repeated commands cannot repeat the jump");
         });

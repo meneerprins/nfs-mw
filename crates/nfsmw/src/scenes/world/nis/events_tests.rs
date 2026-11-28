@@ -139,7 +139,10 @@ fn the_world_events_read_their_fields_and_the_inert_ones_say_so() {
     assert_eq!(decode(&package, &event(super::ids::PHOTO_FINISH, &[])), Some(NisEvent::PhotoFinish));
     let time =
         event(super::ids::TIME_OF_DAY, &[0.18_f32.to_bits(), 1.0_f32.to_bits(), 4.3_f32.to_bits(), 0.1_f32.to_bits()]);
-    assert_eq!(decode(&package, &time), Some(NisEvent::Inert("ENISTimeOfDay")));
+    assert_eq!(
+        decode(&package, &time),
+        Some(NisEvent::TimeOfDay(super::SceneLighting { phase: 0.18, rate: 1.0, azimuth: 4.3, overcast: 0.1 }))
+    );
     assert_eq!(
         decode(&package, &event(super::ids::FAKE_FAR, &[450.0_f32.to_bits()])),
         Some(NisEvent::Inert("ENISFakeFar"))

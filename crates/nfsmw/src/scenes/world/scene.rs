@@ -161,21 +161,23 @@ impl Scene for WorldScene {
     fn environment(&self) -> Option<crate::viewer::Environment> {
         Some(self.environment_state())
     }
-
+    fn career_clock(&self) -> Option<DayClock> {
+        Some(self.day.clone())
+    }
+    fn resume_career_roaming(&mut self) {
+        self.restore_roaming_weather();
+    }
     fn traffic_status(&self) -> Option<String> {
         self.traffic
             .as_ref()
             .map(|traffic| format!("{}\n{}", traffic.population_status(self.traffic_focus()), traffic.pursuit_status()))
     }
-
     fn set_environment(&mut self, value: crate::viewer::Environment) {
         self.configure_environment(value);
     }
-
     fn next_camera_mode(&self, current: CameraMode) -> CameraMode {
         camera_cycle::next_mode(current, self.camera_environment.views.as_ref(), &self.extra_view_keys())
     }
-
     fn takes_camera_setting(&self) -> bool {
         self.players.has_lead()
     }

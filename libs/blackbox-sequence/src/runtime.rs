@@ -93,6 +93,13 @@ impl Player {
         self.emitted.pop_front()
     }
 
+    /// Dispatch a host event tag to each active action in activation order.
+    pub fn fire_tag(&mut self, package: &Package, tag: u32) {
+        for index in 0..self.active_order.len() {
+            self.tag(package, self.active_order[index], tag, None);
+        }
+    }
+
     /// Deliver to one system (`Some`) or every system (`None`), in stored order.
     pub fn stimulate(
         &mut self,

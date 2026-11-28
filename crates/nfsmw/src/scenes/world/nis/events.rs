@@ -13,7 +13,16 @@ use super::car_events::CarEvent;
 /// The stimulus that starts a scene's events: the word `START` (`docs/specs/nis-events.md` section 1.2).
 pub const START: u32 = 0xA6A5_6EA1;
 
-/// An event a NIS scene fires, with the parameters the player reads. Strings are the names the scene's string table holds.
+/// The daylight orbit and sky blend authored for one cinematic cue.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct SceneLighting {
+    pub phase: f32,
+    pub rate: f32,
+    pub azimuth: f32,
+    pub overcast: f32,
+}
+
+/// One event emitted by the scene sequence.
 #[derive(Debug, Clone, PartialEq)]
 pub enum NisEvent {
     Car {
@@ -50,6 +59,7 @@ pub enum NisEvent {
     MotionBlur(bool),
     /// `ENISRain`: the rain intensity the scene forces.
     Rain(f32),
+    TimeOfDay(SceneLighting),
     /// `ENISStopEffects`: every particle effect stops.
     StopEffects,
     /// `ENISAeroDynamics`: the downforce factor of the scene's cars while they move on their own.
@@ -60,7 +70,7 @@ pub enum NisEvent {
     DDaySpeech,
     /// `ENISRoadNoise`: the road noise of the cars off (`true`) or on.
     RoadNoise(bool),
-    /// An event the original decodes but never acts on (`ENISTimeOfDay`, `ENISFakeFar`, `ENISNukeSmack`, `ENISDetail`):
+    /// An event the original decodes but never acts on (`ENISFakeFar`, `ENISNukeSmack`, `ENISDetail`):
     /// its name. Spec: `nis-events.md` section 2.2.
     Inert(&'static str),
     /// An event with no handler (its id). The runner logs it once per scene.
@@ -145,11 +155,23 @@ impl NisEvents {
             self.failed = true;
             return Vec::new();
         }
+        self.take_fired(&package)
+    }
+
+    /// Fires the tag attached to entering the given camera key.
+    pub(super) fn camera_cut(&mut self, index: usize) {
+        if !self.failed {
+            let tag = blackbox_attrib::vlt_hash(&format!("ICECut{index}"));
+            self.player.fire_tag(&self.package, tag);
+        }
+    }
+
+    fn take_fired(&mut self, package: &Package) -> Vec<NisEvent> {
         let mut fired = Vec::new();
         while let Some(emission) = self.player.pop() {
             let Some(list) = package.event_lists.get(&emission.list) else { continue };
             for event in list {
-                self.collect(&package, event, emission.system, &mut fired);
+                self.collect(package, event, emission.system, &mut fired);
             }
         }
         fired
@@ -201,7 +223,12 @@ pub fn decode(package: &Package, event: &Event) -> Option<NisEvent> {
         ids::PHOTO_FINISH => NisEvent::PhotoFinish,
         ids::DDAY_SPEECH => NisEvent::DDaySpeech,
         ids::ROAD_NOISE => NisEvent::RoadNoise(fields.word(4)? != 0),
-        ids::TIME_OF_DAY => NisEvent::Inert("ENISTimeOfDay"),
+        ids::TIME_OF_DAY => NisEvent::TimeOfDay(SceneLighting {
+            phase: fields.number(4)?,
+            rate: fields.number(8)?,
+            azimuth: fields.number(12)?,
+            overcast: fields.number(16)?,
+        }),
         ids::FAKE_FAR => NisEvent::Inert("ENISFakeFar"),
         ids::NUKE_SMACK => NisEvent::Inert("ENISNukeSmack"),
         ids::DETAIL => NisEvent::Inert("ENISDetail"),

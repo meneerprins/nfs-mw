@@ -45,6 +45,9 @@ impl Frontend {
         if self.safe_house_start.zone.is_none() {
             self.safe_house_start.zone = self.career.with(|career| career.saved_safe_house_zone()).flatten();
         }
+        self.parked_career_clock.get_or_insert_with(|| {
+            host.scene.career_clock().unwrap_or_else(crate::scenes::world::DayClock::initial_safehouse_clock)
+        });
         self.career.set_prelude(true);
         self.in_safe_house = true;
         self.latch = true;

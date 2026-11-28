@@ -21,8 +21,11 @@ const ORBIT_LENS_MM: f32 = 35.0;
 
 /// The sample of `track` at scene time `time` (seconds). The track's fraction is the time over its length.
 pub fn track_sample(track: &Track, time: f32) -> Option<CameraSample> {
-    let fraction = (time / track.length.max(1e-3)).clamp(0.0, 1.0);
-    track.sample(fraction)
+    track.sample(track_fraction(track, time))
+}
+
+pub(super) fn track_fraction(track: &Track, time: f32) -> f32 {
+    (time / track.length.max(1e-3)).clamp(0.0, 1.0)
 }
 
 /// The slow orbit about the anchor at `fraction` (0 to 1) of the scene. The eye starts a little to one side of the

@@ -55,15 +55,15 @@ impl Frontend {
             Command::DeleteSms { id, then } => self.delete_sms(id, then.map(|then| *then), host, env),
             Command::RestartRace => self.restart_race(host),
             Command::Resume if self.career.is_prelude() => self.start_from_safe_house(host, env),
-            Command::Resume => self.resume_driving(env),
+            Command::Resume => self.resume_driving(host, env),
             Command::AcceptTrapPhoto => {
-                self.resume_driving(env);
+                self.resume_driving(host, env);
                 self.free_roam_autosave(nfsmw_career::savefile::Trigger::SpeedTrapPhotoAccepted);
             }
             Command::EndCoop => self.end_coop_from_pause(host, env),
             Command::SetWaypoint(target) => {
                 host.scene.set_waypoint(Some(target));
-                self.resume_driving(env);
+                self.resume_driving(host, env);
             }
             Command::QuitTo(to) => {
                 self.save_settings(env.changed);

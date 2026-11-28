@@ -137,6 +137,7 @@ impl WorldScene {
             json!({
                 "scene": now.name,
                 "scene_time": round(now.scene_time),
+                "environment": self.story_environment_sample(),
                 "elapsed": round(now.elapsed),
                 "camera": lens_json(lens),
                 "channels": channels,

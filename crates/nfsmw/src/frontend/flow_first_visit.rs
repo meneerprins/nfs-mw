@@ -94,6 +94,7 @@ impl Frontend {
         if !prologue {
             return false;
         }
+        self.seek_career_day_start(host);
         let args = Args { safehouse: true, sequence: true, ..Args::default() };
         crate::parity::career_trace::record("handoff", serde_json::json!({"to": "first_safe_house_visit"}));
         self.play_movie(FIRST_VISIT_MOVIE, AfterMovie::Open(SAFE_HOUSE_RIVAL_BIO.to_owned(), args), host);

@@ -13,6 +13,11 @@ pub mod wind;
 
 /// A chance below this forces the rain off (the script hook's threshold).
 pub const DRY_THRESHOLD: f32 = 0.01;
+
+/// Whether the script's chance parameter suppresses regional precipitation.
+pub fn forces_dry(chance: f32) -> bool {
+    chance.clamp(0.0, 1.0) < DRY_THRESHOLD
+}
 /// Rate of the rain ease, from the spec's constants.
 pub const RAIN_EASE: f32 = 1.0;
 /// Rate of the wind-like ease, from the spec's constants.
@@ -61,8 +66,7 @@ impl Weather {
     /// `DRY_THRESHOLD` forces the rain off. Any other chance clears the override, so the normal
     /// roll is used. The spec's decompile does not store the chance itself.
     pub fn set_chance_of_rain(&mut self, chance: f32) {
-        let chance = chance.clamp(0.0, 1.0);
-        self.override_ = (chance < DRY_THRESHOLD).then_some(Override::ForcedDry);
+        self.override_ = forces_dry(chance).then_some(Override::ForcedDry);
     }
 
     /// The override in effect, if any.

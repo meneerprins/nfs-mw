@@ -319,6 +319,9 @@ fn a_scene_hands_out_its_events_as_its_clock_passes_them() {
     assert_eq!(nis.take_outcome(), Some(NisOutcome::Completed));
 }
 
+#[path = "player_events_tests.rs"]
+mod player_events_tests;
+
 #[test]
 fn skipping_a_scene_stops_its_events() {
     let mut nis = NisPlayer::default();

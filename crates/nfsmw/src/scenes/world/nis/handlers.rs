@@ -187,6 +187,8 @@ impl NisScreen {
 pub(super) enum Request {
     /// Queue the phone call or message `id` through the career phone.
     Call(u32),
+    Rain(f32),
+    Lighting(super::SceneLighting),
     /// Play a named effect at a point of the scene.
     Effect(EffectRequest),
     /// End every particle effect now.
@@ -234,11 +236,8 @@ pub(super) fn dispatch(event: NisEvent, screen: &mut NisScreen) -> Option<Reques
             screen.set_motion_blur(on);
             None
         }
-        NisEvent::Rain(amount) => {
-            // The original forces its rain override to `amount`; the prologue only sends -1. Not applied here.
-            log::debug!("NIS rain {amount}: the world's rain is not forced");
-            None
-        }
+        NisEvent::Rain(amount) => Some(Request::Rain(amount)),
+        NisEvent::TimeOfDay(light) => Some(Request::Lighting(light)),
         NisEvent::StopEffects => Some(Request::StopEffects),
         NisEvent::AeroDynamics(factor) => {
             log::debug!("NIS aerodynamics {factor}: the scene's free cars have no downforce of their own here");
@@ -269,6 +268,19 @@ impl WorldScene {
     pub(in crate::scenes::world) fn apply_nis_events(&mut self, events: Vec<NisEvent>) {
         for event in events {
             match dispatch(event, self.nis.screen_mut()) {
+                Some(Request::Rain(amount)) => self.rain.set_nis_override(amount),
+                Some(Request::Lighting(light)) => {
+                    self.nis_lighting(light);
+                    if crate::parity::career_trace::enabled() {
+                        crate::parity::career_trace::record(
+                            "nis_lighting",
+                            serde_json::json!({
+                                "scene":self.nis.playing_name(),"scene_time":self.nis.scene_time(),
+                                "environment":self.story_environment_sample()
+                            }),
+                        );
+                    }
+                }
                 Some(Request::Call(id)) => self.career.phone.call(id),
                 Some(Request::Effect(effect)) => self.play_nis_effect(effect),
                 Some(Request::StopEffects) => self.object_fx.request([Command::KillAll]),

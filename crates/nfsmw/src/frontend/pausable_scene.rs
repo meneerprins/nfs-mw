@@ -165,7 +165,12 @@ impl Scene for Pausable {
     fn environment(&self) -> Option<crate::viewer::Environment> {
         self.inner.environment()
     }
-
+    fn career_clock(&self) -> Option<crate::scenes::world::DayClock> {
+        self.inner.career_clock()
+    }
+    fn resume_career_roaming(&mut self) {
+        self.inner.resume_career_roaming();
+    }
     fn traffic_status(&self) -> Option<String> {
         self.inner.traffic_status()
     }

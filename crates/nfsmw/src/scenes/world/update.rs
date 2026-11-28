@@ -34,6 +34,7 @@ impl WorldScene {
         // The bust's arrest scene starts before the NIS is advanced, so its first frame cuts and freezes the world.
         self.update_arrest_nis();
         self.update_nis(input, dt);
+        let nis_weather_dt = self.nis.scene_time().map(|_| dt);
         self.update_nis_characters(renderer);
         self.update_nis_models(renderer);
         self.update_story_movie(input, dt);
@@ -205,8 +206,10 @@ impl WorldScene {
             .map(|map| map.at(glam::Vec3::from_array(space::to_physics(lens.position))))
             .unwrap_or_default();
         let exposed = !(environment.tunnel || environment.overpass || environment.garage || environment.dynamic);
-        self.rain.update_view(sim_dt, lens.position, lens.forward, exposed);
-        self.wet_road.step_rain(sim_dt, self.rain.intensity());
+        // Scene weather eases while the gameplay simulation is held.
+        let weather_dt = nis_weather_dt.unwrap_or(sim_dt);
+        self.rain.update_view(weather_dt, lens.position, lens.forward, exposed);
+        self.wet_road.step_rain(weather_dt, self.rain.intensity());
         let splash_rain = if exposed { self.rain.visible_intensity() } else { 0.0 };
         let splash_centre = self.players.lead().map_or(lens.position, |drive| drive.position());
         self.rain_splash.step(
@@ -228,13 +231,13 @@ impl WorldScene {
                 },
             );
         }
-        self.update_atmosphere(sim_dt);
+        self.update_atmosphere(weather_dt);
         drop(trace);
         let trace = blackbox_trace::scope("World: update / sky, day and animation");
         self.clock += sim_dt * self.tuning.animation_speed;
         self.mesh_animations.advance(sim_dt * self.tuning.animation_speed, &self.residency);
         self.environment_lights.blink.advance(sim_dt);
-        self.update_day(sim_dt, renderer.render_experiments().freeze_sun);
+        self.update_day(weather_dt, renderer.render_experiments().freeze_sun);
         self.update_sky(renderer);
 
         self.residency.animate(renderer, self.clock);

@@ -75,6 +75,7 @@ struct Playing {
     anchor: Anchor,
     focus: Anchor,
     camera: Option<Track>,
+    camera_key: Option<usize>,
     run: Playback,
     /// The scene's car tracks (`cars.rs`), one per car slot that has both its clips.
     cars: Vec<CarTrack>,
@@ -247,6 +248,7 @@ impl NisPlayer {
             anchor: plan.anchor,
             focus: plan.focus,
             camera: plan.camera,
+            camera_key: None,
             run,
             cars,
             links: None,
@@ -284,7 +286,7 @@ impl NisPlayer {
         let before = playing.run.elapsed();
         let finished = playing.run.advance(dt * speed) == PlaybackState::Finished;
         let step = playing.run.elapsed() - before;
-        let mut events = playing.events.as_mut().map_or_else(Vec::new, |events| events.advance(step));
+        let mut events = playing.advance_events(step);
         events.retain(|event| {
             let NisEvent::Car { system, event } = *event else { return true };
             // A channel with no car fires nothing in the original (live log, `nis-events.md` section 2.2).
@@ -491,6 +493,8 @@ mod camera_api;
 pub mod capture_api;
 #[path = "player_cars.rs"]
 mod cars_api;
+#[path = "player_events.rs"]
+mod player_events;
 #[cfg(test)]
 #[path = "player_tests.rs"]
 mod tests;

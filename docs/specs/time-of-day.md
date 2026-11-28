@@ -336,3 +336,13 @@ Manual changes refresh player light state and invalidate reflection captures.
 Clear/Rain and rain amount forward through live settings and replacement scenes.
 These controls expose the existing custom host curves; they do not complete the
 unimplemented sky, world light or regional weather behavior described above.
+
+## Career and scripted scenes
+
+In offline career apply a nonnegative installed race TOD as an orbit phase. An inherited negative TOD continues
+the previous phase. The car-lot jump and first safehouse movie request phase zero. Ordinary safehouse visits
+keep advancing the existing orbit, including its direction, and resume regional weather on departure.
+The restored ENISTimeOfDay action sets phase, update rate, azimuth and overcast from its four finite authored
+fields. A zero rate holds the shot. Clear the cinematic overcast when returning to the frontend. These settings
+use the PC world's daylight orbit even when enhanced sky rendering is enabled. Explicit user clock and cloud
+overrides retain precedence. ENISRain temporarily overrides race policy until the scene releases the car.

@@ -2,7 +2,7 @@
 //! to stand on the grid. The rest of the start happens in `load.rs` once the world and the models are ready.
 
 use blackbox_race::{Course, RaceConfig};
-use nfsmw_data::gameplay::{GameplayData, Race, RaceType};
+use nfsmw_data::gameplay::{GameplayData, Race, RaceStory, RaceType};
 
 use super::grid;
 use super::heat::{self, HeatChase, Police};
@@ -238,6 +238,9 @@ impl WorldScene {
             self,
             super::police_context::context_of(&race, options.career),
         )?;
+        if options.career {
+            self.apply_career_environment(&race.story);
+        }
         self.race = Some(RaceSession {
             event: crate::career::race_event_id(&race),
             map: crate::hud::MapSource::of_race(
@@ -282,6 +285,18 @@ impl WorldScene {
             restarted: false,
         });
         Ok(format!("{}: {} racer(s), getting to the grid", race.name, racers))
+    }
+
+    pub(super) fn apply_career_environment(&mut self, story: &RaceStory) {
+        if let Some(phase) = story.sun_phase {
+            self.set_story_phase(phase);
+        }
+        self.apply_career_rain(story.chance_of_rain);
+    }
+
+    pub(super) fn apply_career_rain(&mut self, chance: Option<f32>) {
+        let dry = chance.is_some_and(crate::weather::forces_dry);
+        self.rain.set_story_override(if dry { -1.0 } else { 0.0 });
     }
 }
 

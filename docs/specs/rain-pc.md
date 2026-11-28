@@ -30,12 +30,24 @@ visible from inside it; suppressing all distant rainfall is not curtain parity.
 ## Regional weather [decomp]
 
 The `Rain` parameter-map layer has intensity in field 0 and comparison threshold in
-field 1. Rain is selected when the gate does not exceed the threshold. Forced rain
-overrides the regional selection; zero amount disables precipitation.
+field 1. Rain is selected when the gate does not exceed the threshold.
 The original gate converts `(0.71428573*t + 0.02*x)*65536` to an integer, divides by
 360, then evaluates a 16-bit cosine. The result is `1-max(cosine,0)`.
-Free roam uses t=1; other gameplay modes use the original wrapping clock. Earlier
-notes omitted FPU operands and incorrectly reduced this gate to zero.
+The ordinary offline path uses t=1, including races. The wrapping clock is selected
+by a separate flag or online initialization.
+
+The offline rain sampler reads a signed override. A negative value selects a dry
+target, zero selects the regional map, and a positive value selects explicit rain.
+The career chance setter selects dry below 0.01 and regional otherwise after
+clamping the chance to [0,1]. The prologue traces observed dry overrides at each
+driven race start and regional weather at the post-Rog meeting.
+
+A scene rain key uses the same signed override. At release, the scene gives up
+control and career can reassert the race policy. The remake layers the active
+scene override above the race policy and drops the scene override on finish, stop
+or skip. During scene playback the renderer steps weather on frame time while
+gameplay simulation is held. Manual forced rain and a zero manual rain amount
+take precedence, and the renderer caps explicit rain at full intensity.
 
 Original rain easing is dt/1, snapping dry below 0.01. Elapsed-time integration may
 use the equivalent 60 Hz recurrence for stable high-refresh behavior. Road dampness

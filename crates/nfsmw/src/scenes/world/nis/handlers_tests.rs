@@ -76,14 +76,14 @@ fn a_named_effect_asks_the_world_to_play_it_at_its_point() {
 #[test]
 fn the_events_the_player_only_logs_ask_the_world_for_nothing() {
     let mut screen = NisScreen::default();
+    assert_eq!(dispatch(NisEvent::Rain(-1.0), &mut screen), Some(Request::Rain(-1.0)));
     let logged = [
         NisEvent::HideCharacter { name: "Cop".into(), show: false },
         NisEvent::Freeze(true),
         NisEvent::CopLights(true),
-        NisEvent::Rain(-1.0),
         NisEvent::PhotoFinish,
         NisEvent::DDaySpeech,
-        NisEvent::Inert("ENISTimeOfDay"),
+        NisEvent::Inert("ENISFakeFar"),
         NisEvent::Other(7),
     ];
     for event in logged {

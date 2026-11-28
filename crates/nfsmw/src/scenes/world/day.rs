@@ -6,9 +6,16 @@ use nfsmw_data::day_night::{self, DayNightConfig};
 use nfsmw_data::time_of_day::sun_phase_limit;
 
 use super::WorldScene;
+mod story;
 
 /// The clock's state.
-pub(super) struct DayClock {
+#[derive(Clone, Debug)]
+pub(crate) struct DayClock {
+    story_orbit: bool,
+    manual_clock: bool,
+    rate: f32,
+    overcast: Option<f32>,
+    azimuth: f32,
     cfg: DayNightConfig,
     /// Simulated seconds since the world started.
     seconds: f64,
@@ -22,8 +29,13 @@ pub(super) struct DayClock {
 }
 
 impl DayClock {
-    pub(super) fn new(cfg: DayNightConfig) -> Self {
+    pub(crate) fn new(cfg: DayNightConfig) -> Self {
         Self {
+            story_orbit: false,
+            manual_clock: cfg.force_time.is_some() || cfg.real_time,
+            rate: 1.0,
+            overcast: None,
+            azimuth: cfg.sun_azimuth,
             cfg,
             seconds: 0.0,
             sun_mode: Default::default(),
@@ -61,7 +73,7 @@ impl DayClock {
                 true => offset,
                 false => 2.0 * span - offset,
             };
-            let at = (unfolded + f64::from(dt) / 1200.0).rem_euclid(2.0 * span);
+            let at = (unfolded + f64::from(dt) * f64::from(self.rate) / 1200.0).rem_euclid(2.0 * span);
             self.direction = match at < span {
                 true => 1.0,
                 false => -1.0,
@@ -84,6 +96,11 @@ impl DayClock {
 
     /// The hour of day now.
     pub(super) fn hour(&self) -> f32 {
+        if self.story_orbit {
+            let lo = sun_phase_limit(0);
+            return self.cfg.sun_rise
+                + (self.sun_phase() - lo) / (1.0 - 2.0 * lo) * (self.cfg.sun_set - self.cfg.sun_rise);
+        }
         day_night::clock_hour(&self.cfg, self.seconds as f32)
     }
 
@@ -103,7 +120,18 @@ impl DayClock {
         }
         // Only an explicit hour change seeks clouds. Weather/speed changes keep
         // the current field; normal midnight wrapping never resets its phase.
+        if value.hour == self.hour()
+            && value.seconds_per_hour == self.cfg.seconds_per_hour
+            && value.sun_mode == self.sun_mode
+            && value.sun_phase == self.sun_phase()
+        {
+            return;
+        }
         let delta = day_night::wrap_hour(value.hour) - self.hour();
+        self.manual_clock = true;
+        self.story_orbit = false;
+        self.azimuth = self.cfg.sun_azimuth;
+        self.rate = 1.0;
         self.cloud_seek_seconds += f64::from(delta * self.cfg.seconds_per_hour);
         self.sun_mode = value.sun_mode;
         self.phase = f64::from(value.sun_phase.clamp(sun_phase_limit(0), 1.0 - sun_phase_limit(0)));
@@ -119,7 +147,7 @@ impl DayClock {
     }
 
     /// The sun's phase for the hour.
-    pub(super) fn sun_phase(&self) -> f32 {
+    pub(crate) fn sun_phase(&self) -> f32 {
         if self.sun_mode != crate::viewer::SunMode::CustomClock {
             return self.phase as f32;
         }
@@ -143,17 +171,19 @@ impl WorldScene {
     pub(super) fn update_day(&mut self, sim_dt: f32, frozen: bool) {
         let held = frozen || self.day.held();
         let cycle = self.sun.cycle().is_some();
-        if cycle {
+        if cycle && !self.day.story_orbit {
             self.day.follow_custom_clock();
         }
         self.day.update(sim_dt, held);
+        self.sun.set_azimuth(self.day.azimuth);
         self.sun.set_phase(self.day.sun_phase());
-        self.sun.set_cycle(cycle.then(|| self.day.hour()));
+        self.sun.set_cycle((cycle && !self.day.story_orbit).then(|| self.day.hour()));
     }
 
     /// Switch the full day/night cycle on or off for this frame. Called before anything reads the sun, so shadows,
     /// lighting, sky and automatic lights all use the same evaluation.
     pub(super) fn select_cycle(&mut self, on: bool) {
+        let on = on && !self.day.story_orbit;
         if on {
             self.day.follow_custom_clock();
         }

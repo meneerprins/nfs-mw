@@ -33,6 +33,25 @@ fn the_story_fields_are_in_the_gameplay_schema() {
 
 #[test]
 #[ignore = "needs the game (set NFSMW_GAME_DIR)"]
+fn the_prologue_reads_authored_and_inherited_weather() {
+    let dir = install().expect("set NFSMW_GAME_DIR to verify installed race weather");
+    let data = gameplay::load(&dir).expect("gameplay data");
+    for (id, sun_phase, chance_of_rain) in [
+        ("16.1.0", Some(1.0), -1.0),
+        ("16.2.2", Some(1.0), -1.0),
+        ("16.2.3", Some(1.0), -1.0),
+        ("16.1.1", Some(0.5), -1.0),
+        ("16.8.1", None, 0.5),
+        ("16.2.1", Some(1.0), -1.0),
+    ] {
+        let story = &event(&data, id).story;
+        assert_eq!(story.sun_phase, sun_phase, "{id} TOD");
+        assert_eq!(story.chance_of_rain, Some(chance_of_rain), "{id} ChanceOfRain");
+    }
+}
+
+#[test]
+#[ignore = "needs the game (set NFSMW_GAME_DIR)"]
 fn the_prologue_intros_match_the_documented_table() {
     let Some(dir) = install() else { return };
     let data = gameplay::load(&dir).expect("gameplay data");

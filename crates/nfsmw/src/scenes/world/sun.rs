@@ -37,6 +37,10 @@ impl Sun {
         Self { phase: START_PHASE, lo: sun_phase_limit(0), azimuth: DayNightConfig::default().sun_azimuth, cycle: None }
     }
 
+    pub(super) fn set_azimuth(&mut self, azimuth: f32) {
+        self.azimuth = azimuth;
+    }
+
     /// Sets the phase, for the time of day (see `nfsmw_data::day_night::sun_phase`).
     pub(super) fn set_phase(&mut self, phase: f32) {
         self.phase = phase;

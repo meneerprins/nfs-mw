@@ -384,7 +384,9 @@ fn describe(event: &NisEvent, kind: NisKind) -> (String, bool) {
             let acted = !matches!(event, CarEvent::Nitro(_) | CarEvent::NeutralRev { .. });
             (format!("{event:?} {channel}"), acted)
         }
-        NisEvent::MotionBlur(_) | NisEvent::StopEffects => (format!("{event:?}"), true),
+        NisEvent::Rain(_) | NisEvent::TimeOfDay(_) | NisEvent::MotionBlur(_) | NisEvent::StopEffects => {
+            (format!("{event:?}"), true)
+        }
         // The original stores these and acts on none of them: doing nothing is the original's behaviour.
         NisEvent::Inert(name) => ((*name).to_owned(), true),
         NisEvent::CellCall(id) => (format!("ECellCall {id}"), true),

@@ -16,6 +16,7 @@ mod cargo;
 mod commands;
 mod dash_feed;
 mod day;
+pub(crate) use day::DayClock;
 mod detail;
 #[cfg(test)]
 mod determinism_tests;

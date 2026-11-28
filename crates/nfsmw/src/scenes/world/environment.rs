@@ -1,13 +1,27 @@
 //! Lighting comparison controls; no simulation step or asset reload on selection.
 
-use super::WorldScene;
+use super::{DayClock, WorldScene};
 use crate::viewer::Environment;
 
 impl WorldScene {
+    pub(crate) fn restore_career_clock(&mut self, clock: DayClock) {
+        self.day = clock;
+        self.update_day(0.0, true);
+        self.reflection_last = None;
+    }
+
+    pub(super) fn restore_roaming_weather(&mut self) {
+        self.day.clear_story_overcast();
+        self.rain.clear_nis_override();
+        if !self.race.as_ref().is_some_and(|race| race.origin.race.story.dday) {
+            self.rain.set_story_override(0.0);
+        }
+    }
+
     pub(super) fn environment_state(&self) -> Environment {
         Environment {
             cloud_override: self.atmosphere.override_amount(),
-            cloud_intensity: self.atmosphere.intensity(),
+            cloud_intensity: self.visible_overcast(),
             cloud_target: self.atmosphere.target(self.focus(), self.rain.target()),
             rain_intensity: self.rain.intensity(),
             road_wetness_override: self.wet_road.override_amount,

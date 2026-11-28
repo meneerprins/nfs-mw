@@ -55,7 +55,7 @@ impl Frontend {
     pub(super) fn end_coop_from_pause(&mut self, host: &mut Host, env: &mut Env) {
         host.scene.end_coop();
         self.end_coop();
-        self.resume_driving(env);
+        self.resume_driving(host, env);
     }
 
     /// Co-op is forgotten: the session ends and the count of players goes back to one.

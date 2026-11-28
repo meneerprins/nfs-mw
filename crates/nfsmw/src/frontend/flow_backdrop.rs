@@ -3,6 +3,34 @@
 use super::*;
 
 impl Frontend {
+    pub(in crate::frontend) fn advance_parked_career_clock(&mut self, dt: f32, frozen: bool) {
+        if let Some(clock) = self.parked_career_clock.as_mut() {
+            clock.advance_in_menu(dt, frozen);
+        }
+    }
+
+    /// Takes the current clock with its direction and rate before the world is released.
+    fn clock_for_menu(&self, host: &Host) -> Option<crate::scenes::world::DayClock> {
+        if !self.career.is_active() || self.parked_career_clock.is_some() {
+            return None;
+        }
+        let mut clock = host.scene.career_clock()?;
+        clock.clear_story_overcast();
+        Some(clock)
+    }
+
+    /// The scripted first car lot and first safe house movie set the sun to the start of daylight.
+    pub(super) fn seek_career_day_start(&mut self, host: &Host) {
+        let mut clock = self
+            .parked_career_clock
+            .take()
+            .or_else(|| host.scene.career_clock())
+            .unwrap_or_else(|| crate::scenes::world::DayClock::new(Default::default()));
+        clock.clear_story_overcast();
+        clock.set_story_phase(0.0);
+        self.parked_career_clock = Some(clock);
+    }
+
     /// Runs the car select's loading LEDs while the menu backdrop is still building its car (R2).
     pub(in crate::frontend) fn sync_car_loading(&mut self, host: &Host) {
         let loading = self.stage == Stage::Menus && self.menu_in_window && !host.scene.ready();
@@ -22,12 +50,16 @@ impl Frontend {
     /// (`Host::replace_scene_parking_old`); any other scene is released.
     pub(super) fn replace_scene(&mut self, host: &mut Host, scene: Box<dyn crate::viewer::Scene>, park: bool) -> bool {
         let parks_menu = park && self.menu_in_window;
+        let clock = self.clock_for_menu(host);
         let result = match parks_menu {
             true => host.replace_scene_parking_old(scene),
             false => host.replace_scene(scene),
         };
         match result {
             Ok(()) => {
+                if let Some(clock) = clock {
+                    self.parked_career_clock = Some(clock);
+                }
                 self.menu_in_window = false;
                 true
             }
@@ -45,7 +77,11 @@ impl Frontend {
         if self.menu_in_window {
             return;
         }
+        let clock = self.clock_for_menu(host);
         if host.restore_parked_menu() {
+            if let Some(clock) = clock {
+                self.parked_career_clock = Some(clock);
+            }
             self.menu_in_window = true;
             return;
         }

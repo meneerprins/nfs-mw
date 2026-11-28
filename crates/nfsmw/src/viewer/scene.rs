@@ -33,6 +33,12 @@ pub trait Scene {
         None
     }
     fn set_environment(&mut self, _value: Environment) {}
+    /// The driving clock, including its direction and holds, for a career scene handoff.
+    fn career_clock(&self) -> Option<crate::scenes::world::DayClock> {
+        None
+    }
+    /// Resume regional weather when the safe house releases a resident driving world.
+    fn resume_career_roaming(&mut self) {}
     /// Whether a mod has held the hour (`bb.time` freeze). Scenes without a clock report false.
     fn time_held(&self) -> bool {
         false

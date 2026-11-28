@@ -123,7 +123,7 @@ static count (section 4).
 | ENISOverlayMessage | `37A3EE72` | 4: p `fOverlayName`; 8: p `fOverlayMessage` | 31 | 60 | Shows a front-end overlay package with a message. Strings seen: packages `BUSTED_OVERLAY.fng`, `BLACK_FADE_OUT.fng`; messages `FLASHTRIGGER`, `15_OUT`. [verified strings] |
 | ENISPixelate | `86D368CB` | 4: i `fEnable`; 8: f `fWidth`; 12: f `fHeight` | 24 | 116 | Pixelation on or off, with a block size. [inferred] |
 | ENISPlayEffect | `58AAE7A8` | 4: p `fEffect`; 8, 12, 16: f `fPositionX/Y/Z`; 20, 24, 28: f `fMagnitudeX/Y/Z` | 12 | 31 | Plays a named effect at a point, with a magnitude vector. The string table of `IntroNisBL03` holds `exp_lg2`, `env_extrasparks`, `env_carsmash1`, `dustbillow_lg1`, `glasstrail1`; that these are this event's effect names is [inferred]. |
-| ENISRain | `6A465054` | 4: f `fRainIntensity` | 16 | 20 | Rain intensity. The value -1 (11 of 20 uses) probably means "leave unchanged". [inferred] |
+| ENISRain | `6A465054` | 4: f `fRainIntensity` | 16 | 20 | Rain intensity. Negative forces dry, zero selects regional weather, positive sets intensity in offline play. [pc] |
 | ENISReattach | `CF01B27E` | 4: i `fRepairDamage` | 18 | 177 | Reattaches a part; repair value 0 in all uses. [inferred] |
 | ENISRoadNoise | `B9A02FA8` | 4: i `fDisableRoadNoise` | 1 | 4 | Disables road noise (`IntroNis01`). [inferred] |
 | ENISScreenFlash | `9F79A4ED` | 4: f `fLength` | 0 | 0 | Not used in any NIS. |
@@ -345,7 +345,7 @@ of the table it reads.
 
 ## 8. Facts still missing
 
-1. Done for the PC: [part 3](nis-events-3.md). Open there: what `ENISRain` -1 does, the camera context of the lag byte.
+1. Done for the PC: [part 3](nis-events-3.md). The camera context of the lag byte remains open.
 2. The meaning of stimuli `0` and `0x1A24FA80`, and the names of the NIS tags (their hashes are in section 1.3). Which
    animation event calls `NISActivity::FireEventTag`.
 3. `NISActivity::Play` (the start frame) and its caller; the frame of scene time zero relative to the audio start.
